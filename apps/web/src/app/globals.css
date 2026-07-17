@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 20% 99%;
+    --foreground: 240 10% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 12%;
+
+    --primary: 250 84% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 12%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 250 84% 96%;
+    --accent-foreground: 250 84% 30%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 250 84% 60%;
+
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 240 15% 7%;
+    --foreground: 240 10% 96%;
+
+    --card: 240 14% 10%;
+    --card-foreground: 240 10% 96%;
+
+    --primary: 250 84% 66%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 10% 15%;
+    --secondary-foreground: 240 10% 96%;
+
+    --muted: 240 10% 15%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 250 40% 20%;
+    --accent-foreground: 250 84% 85%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 10% 18%;
+    --input: 240 10% 18%;
+    --ring: 250 84% 66%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+}
+
+@layer components {
+  /* Reusable glassmorphism surface — used for nav bars, modals, cards over media */
+  .glass {
+    @apply bg-card/60 backdrop-blur-lg border border-white/10 dark:border-white/5;
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl shadow-soft;
+  }
+}

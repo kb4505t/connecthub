@@ -1,0 +1,73 @@
+# Self-hosted production stack — an alternative to Vercel (web) + Render
+# (api) + Supabase (db) for anyone who'd rather run ConnectHub entirely on
+# their own server. Not what ConnectHub's own deployment uses (see
+# docs/deployment.md for the Vercel/Render/Supabase path), but a real option
+# if you already run infrastructure and don't want three separate vendors.
+#
+# Key differences from the root docker-compose.yml (which is dev-only):
+#   - builds the `production` stage of each Dockerfile, not `development`
+#   - no bind-mounted source volumes (the image is the deployable artifact,
+#     not a shell for hot-reloading against your local filesystem)
+#   - Postgres data persists in a named volume for a real, non-throwaway DB
+#
+# Usage:
+#   cp apps/api/.env.example apps/api/.env.production   # fill in real secrets
+#   cp apps/web/.env.example apps/web/.env.production
+#   docker compose -f docker-compose.prod.yml up --build -d
+#
+# You can still point DATABASE_URL/DIRECT_URL at Supabase instead of the
+# bundled `postgres` service below if you'd rather keep managed Postgres and
+# only self-host the app layer — in that case just remove the `postgres`
+# service and the `depends_on` beneath `api`.
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: connecthub-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: connecthub
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a real password via a .env file, not the dev default}
+      POSTGRES_DB: connecthub
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U connecthub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # Deliberately no host port mapping — only the `api` service on this
+    # Docker network needs to reach Postgres, not the host machine.
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: production
+    container_name: connecthub-api-prod
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./apps/api/.env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: production
+    container_name: connecthub-web-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./apps/web/.env.production
+    depends_on:
+      - api
+
+volumes:
+  postgres_prod_data:

@@ -1,0 +1,57 @@
+# Render Blueprint for the ConnectHub API.
+#
+# This deploys apps/api only. The Next.js frontend is deployed separately to
+# Vercel (see docs/deployment.md) — Vercel's own build pipeline and edge
+# network are a better fit for Next.js than running it as a generic container
+# here, and it keeps the two halves of the stack independently deployable.
+#
+# Usage: in the Render dashboard, "New +" -> "Blueprint" -> point at this repo.
+# Render reads this file and provisions the service below. Secrets marked
+# `sync: false` are intentionally not set here — Render will prompt for them
+# once in the dashboard and never store them in this (version-controlled) file.
+services:
+  - type: web
+    name: connecthub-api
+    runtime: docker
+    dockerContext: ./apps/api
+    dockerfilePath: ./apps/api/Dockerfile
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT is injected by Render itself at runtime; env.ts still validates
+      # and defaults it, so nothing changes locally, but Render's assigned
+      # port always wins in production.
+      - key: PORT
+        value: 4000
+      - key: DATABASE_URL
+        sync: false # Supabase pooled connection string (port 6543)
+      - key: DIRECT_URL
+        sync: false # Supabase direct connection string (port 5432), migrations only
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false # generate with: openssl rand -base64 48
+      - key: JWT_REFRESH_SECRET
+        sync: false # must differ from JWT_ACCESS_SECRET
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: CLIENT_URL
+        sync: false # comma-separated: production Vercel domain (+ preview URLs if used)
+      - key: EMAIL_FROM
+        value: "ConnectHub <noreply@connecthub.dev>"
+      - key: RESEND_API_KEY
+        sync: false # optional — omit to log emails to console instead of sending
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
