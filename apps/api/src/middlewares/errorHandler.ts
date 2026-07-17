@@ -22,7 +22,7 @@ export function asyncHandler(fn: (req: Request, res: Response, next: NextFunctio
  * free of try/catch boilerplate and guarantees a consistent JSON shape
  * for every error response the client ever sees.
  */
-export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
+export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   // Known, expected errors we threw ourselves
   if (err instanceof AppError) {
     if (!err.isOperational) logger.error(err.stack);
