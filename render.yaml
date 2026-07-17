@@ -13,7 +13,12 @@ services:
   - type: web
     name: connecthub-api
     runtime: docker
-    dockerContext: ./apps/api
+    # Build context must be the monorepo root (not ./apps/api) so Docker can
+    # see packages/shared-types and resolve @connecthub/shared-types as a
+    # local npm workspace package instead of trying — and failing — to fetch
+    # it from the public npm registry. dockerfilePath still points at the
+    # Dockerfile inside apps/api; only the context changed.
+    dockerContext: .
     dockerfilePath: ./apps/api/Dockerfile
     plan: free # spins down after 15min idle; cold start ~30-60s on the next request.
                # Bump to "starter" once this needs to stay warm (real users, not just testing).
