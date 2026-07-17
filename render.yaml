@@ -15,7 +15,8 @@ services:
     runtime: docker
     dockerContext: ./apps/api
     dockerfilePath: ./apps/api/Dockerfile
-    plan: starter
+    plan: free # spins down after 15min idle; cold start ~30-60s on the next request.
+               # Bump to "starter" once this needs to stay warm (real users, not just testing).
     region: oregon
     healthCheckPath: /health
     autoDeploy: true

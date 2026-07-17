@@ -1,0 +1,7 @@
+# Normalize line endings in the repo regardless of the OS that committed them.
+* text=auto eol=lf
+
+# Shell scripts must always be LF — a CRLF shebang line breaks with a
+# confusing "no such file or directory" error when run inside the Linux
+# container (docker-entrypoint.sh runs there via `sh`, not on Windows).
+*.sh text eol=lf
