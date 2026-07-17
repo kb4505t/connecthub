@@ -33,6 +33,11 @@ RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
 FROM deps AS development
 COPY packages/shared-types ./packages/shared-types
 COPY apps/api ./apps/api
+# shared-types' package.json "main" points at dist/, so it needs a build
+# even for dev. If you edit packages/shared-types while apps/api's dev
+# container is running, re-run this build (or restart the container) to
+# pick up the change — tsx watches apps/api/src, not shared-types/src.
+RUN npm run build --workspace=packages/shared-types
 WORKDIR /app/apps/api
 EXPOSE 4000
 CMD ["npm", "run", "dev"]
@@ -41,6 +46,7 @@ CMD ["npm", "run", "dev"]
 FROM deps AS build
 COPY packages/shared-types ./packages/shared-types
 COPY apps/api ./apps/api
+RUN npm run build --workspace=packages/shared-types
 RUN npm run build --workspace=apps/api
 
 # --- Production ---
@@ -56,9 +62,9 @@ COPY package*.json ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/shared-types/package.json ./packages/shared-types/package.json
 COPY apps/api/prisma ./apps/api/prisma
-# shared-types has no build step of its own (its "main"/"types" point
-# straight at src/index.ts), so its source needs to be present at runtime too.
-COPY packages/shared-types/src ./packages/shared-types/src
+# shared-types is consumed at runtime via its compiled dist/ (built in the
+# build stage above) — package.json's "main" points there, not at src/.
+COPY --from=build /app/packages/shared-types/dist ./packages/shared-types/dist
 
 RUN npm install --omit=dev --workspace=apps/api
 RUN npx prisma generate --schema=apps/api/prisma/schema.prisma
