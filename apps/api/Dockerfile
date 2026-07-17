@@ -7,6 +7,11 @@
 # --- Base ---
 FROM node:20-alpine AS base
 WORKDIR /app
+# Prisma's query/schema engine binaries are dynamically linked against
+# OpenSSL, which alpine doesn't ship by default. Without this, prisma
+# generate/migrate fail at runtime with a garbled, hard-to-diagnose
+# "Could not parse schema engine response" error instead of a clear one.
+RUN apk add --no-cache openssl
 
 # Root workspace manifests first — better layer caching, since these change
 # less often than application code.
@@ -44,6 +49,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 # wget is used by HEALTHCHECK below; alpine's base image doesn't include it
 RUN apk add --no-cache wget
+# see the base stage above for why openssl is needed
+RUN apk add --no-cache openssl
 
 COPY package*.json ./
 COPY apps/api/package.json ./apps/api/package.json
