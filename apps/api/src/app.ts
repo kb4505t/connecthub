@@ -32,6 +32,7 @@ export function createApp(): Application {
     cors({
       origin: allowedOrigins, // array of allowed origins (prod domain + any preview URLs)
       credentials: true, // allow cookies (refresh token) to be sent cross-origin
+      maxAge: 600, // cache preflight (OPTIONS) results for 10 minutes, avoiding a repeat round-trip per request
     })
   );
   app.use(compression()); // gzip responses
