@@ -5,7 +5,12 @@
 # (and failing) to fetch it from the public npm registry.
 
 # --- Base ---
-FROM node:20-alpine AS base
+# Node 22, not 20: @supabase/supabase-js's realtime client needs the native
+# global WebSocket, which Node only ships starting v22. On Node 20 this
+# doesn't fail at build or install time — only at runtime, the moment
+# createClient() runs — as "Error: Node.js detected but native WebSocket
+# not found."
+FROM node:22-alpine AS base
 WORKDIR /app
 # Prisma's query/schema engine binaries are dynamically linked against
 # OpenSSL, which alpine doesn't ship by default. Without this, prisma
@@ -50,7 +55,8 @@ RUN npm run build --workspace=packages/shared-types
 RUN npm run build --workspace=apps/api
 
 # --- Production ---
-FROM node:20-alpine AS production
+# Node 22 here too — see the base stage's comment above.
+FROM node:22-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 # wget is used by HEALTHCHECK below; alpine's base image doesn't include it

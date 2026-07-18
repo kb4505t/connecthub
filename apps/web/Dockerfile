@@ -5,7 +5,10 @@
 # (and failing) to fetch it from the public npm registry.
 
 # --- Base ---
-FROM node:20-alpine AS base
+# Node 22, not 20: apps/web depends on @supabase/supabase-js too, which
+# needs the native global WebSocket that only exists starting Node 22 (see
+# apps/api/Dockerfile for the exact runtime error this avoids).
+FROM node:22-alpine AS base
 WORKDIR /app
 
 # Root workspace manifests first — better layer caching, since these change
@@ -42,7 +45,8 @@ RUN npm run build --workspace=packages/shared-types
 RUN npm run build --workspace=apps/web
 
 # --- Production ---
-FROM node:20-alpine AS production
+# Node 22 here too — see the base stage's comment above.
+FROM node:22-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
