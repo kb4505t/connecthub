@@ -83,6 +83,7 @@ export function PostActions({ post }: { post: PostDTO }) {
       {post.likesCount > 0 && (
         <Link
           href={`/posts/${post.id}/likes`}
+          prefetch={false}
           className="flex items-center gap-1 mt-2 text-xs text-muted-foreground hover:underline w-fit"
         >
           {post.reactions.map((r) => (
